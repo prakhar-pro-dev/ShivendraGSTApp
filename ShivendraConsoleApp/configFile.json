@@ -1,0 +1,31 @@
+{
+  "inputPath": "C:\\Users\\prakharkumar\\Desktop\\ShivendraApp\\Test\\Test.csv",
+  "outputPath": "C:\\Users\\prakharkumar\\Desktop\\ShivendraApp\\Output",
+  "maxCaptchaTimeoutIteration": 10,
+  "outputFileSuffix": "-Entries",
+  "maxGstIdInvalidIteration": 5,
+  "invalid_id_timeout_in_seconds": 5,
+  "typing_delay_in_milliseconds": 0,
+  "columnWidth": 25,
+  "rowHeight": 20,
+  "columns": [
+    "GSTIN/UIN",
+    "Legal Name of Business",
+    "Trade Name",
+    "Effective Date of registration",
+    "Constitution of Business",
+    "GSTIN / UIN Status",
+    "Taxpayer Type",
+    "Administrative Office",
+    "Other Office",
+    "Commissionerate",
+    "Division",
+    "Range",
+    "Principal Place of Business",
+    "Whether Aadhaar Authenticated?",
+    "Whether e-KYC Verified?",
+    "Additional Trade Name",
+    "Goods",
+    "Services"
+  ]
+}
