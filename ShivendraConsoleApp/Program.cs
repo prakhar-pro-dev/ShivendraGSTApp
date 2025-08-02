@@ -2,7 +2,6 @@
 using Microsoft.Playwright;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -183,7 +182,7 @@ static class Program
 
     internal static bool PageLoadSuccess;
 
-    public static async Task GetDataInXml(IPage page, string originalId, int _row, CancellationToken token)
+    private static async Task GetDataInXml(IPage page, string originalId, int _row, CancellationToken token)
     {
         PageLoadSuccess = false;
         var cts = new CancellationTokenSource();
@@ -360,9 +359,9 @@ static class Program
 
     private static async Task<string[]> GetGstIdsAsync(string filePath)
     {
-        if (!@filePath.Split('\\').Last().EndsWith(".csv"))
+        if (!filePath.Split('\\').Last().EndsWith(".csv"))
         {
-            ConvertToCSV(filePath);
+            ExcelManager.ConvertToCSV(filePath);
             filePath = "output.csv";
         }
 
@@ -371,7 +370,7 @@ static class Program
     }
 
 
-    public static void HandleFileUsedByProcessException(XLWorkbook workbook, CancellationToken token)
+    private static void HandleFileUsedByProcessException(XLWorkbook workbook, CancellationToken token)
     {
         bool alreadPrompted = false;
         while (!token.IsCancellationRequested)
@@ -392,35 +391,5 @@ static class Program
                 alreadPrompted = true;
             }
         }
-    }
-
-    private static void ConvertToCSV(string filePath)
-    {
-        string pythonPath = "python"; // Or use full path like @"C:\Python311\python.exe"
-        string scriptPath = "Convert_To_CSV.py";
-
-        // Quote the argument if it contains spaces
-        string args = $"\"{scriptPath}\" \"{filePath}\"";
-
-        var psi = new ProcessStartInfo
-        {
-            FileName = pythonPath,
-            Arguments = args,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            UseShellExecute = false,
-            CreateNoWindow = true,
-        };
-
-        using var process = Process.Start(psi);
-        string output = process!.StandardOutput.ReadToEnd();
-        string errors = process.StandardError.ReadToEnd();
-
-        process.WaitForExit();
-
-        Console.WriteLine("Output:\n" + output);
-        if (!string.IsNullOrWhiteSpace(errors))
-            Console.WriteLine("Errors:\n" + errors);
-
     }
 }
