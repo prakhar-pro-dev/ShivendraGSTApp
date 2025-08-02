@@ -482,3 +482,9 @@ $RECYCLE.BIN/
 
 # Vim temporary swap files
 *.swp
+
+#SSH
+*.pem
+*.key
+*.pub
+id_*
