@@ -2,6 +2,7 @@
 using Microsoft.Playwright;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -48,13 +49,26 @@ static class Program
     private const string GstinUin = "GSTIN/UIN";
     private const string AdministrativeOffice = "Administrative Office";
     private const string OtherOffice = "Other Office";
+    private const string MainOffice = "Center / State";
+    private const string Central_ = "Central ";
+    private const string Zone = "Zone";
     private const string Commissionerate = "Commissionerate";
     private const string Division = "Division";
     private const string Range = "Range";
     private const string Jurisdiction = "JURISDICTION";
     private const string Center = "CENTER";
+    private const string State_ = "State ";
+    private const string Charge = "Charge";
+    private const string Circle = "Circle";
+    private const string Ward = "Ward";
+    private const string Sector = "Sector";
+    private const string Unit = "Unit";
     private const string Goods = "Goods";
     private const string Services = "Services";
+    //private const string Zone = "Central Zone";
+    //private const string Commissionerate = "Central Commissionerate";
+    //private const string Division = "Central Division";
+    //private const string Range = "Central Range";
 
     #endregion
 
@@ -236,11 +250,68 @@ static class Program
                     if (value.Equals(AdministrativeOffice) || value.Equals(OtherOffice))
                     {
                         string[] strs = list[0].Split('(', '-', ')').Where(s => !s.Equals(string.Empty)).ToArray();
+
+                        if (value.Equals(AdministrativeOffice))
+                        {
+                            data[MainOffice] = list.Where(entry 
+                                    => string.Equals(Jurisdiction, entry.Split('(', '-', ')')
+                                                    .First(s => !s.Equals(string.Empty)).Trim(), 
+                                                    StringComparison.OrdinalIgnoreCase))
+                                .Select(s 
+                                    => s.Split('(', '-', ')').Last(s => !s.Equals(string.Empty)))
+                                .First()?.Trim()!;
+                        }
+
                         if (strs[0].Trim().Equals(Jurisdiction) && strs[^1].Trim().Equals(Center))
                         {
-                            data[Commissionerate] = list[^3].Substring(17);
-                            data[Division] = list[^2].Substring(11);
-                            data[Range] = list[^1].Substring(8);
+                            foreach (var str in list)
+                            {
+                                string? title = str.Split('(', '-', ')').FirstOrDefault(s => !s.Equals(string.Empty))?.Trim();
+
+                                if (title is null) continue;
+
+                                if (string.Equals(Zone, title, StringComparison.OrdinalIgnoreCase))
+                                {
+                                    data[Central_ + Zone] = str.Substring(7);
+                                }
+                                else if (string.Equals(Commissionerate, title, StringComparison.OrdinalIgnoreCase))
+                                {
+                                    data[Central_ + Commissionerate] = str.Substring(17);
+                                }
+                                else if (string.Equals(Division, title, StringComparison.OrdinalIgnoreCase))
+                                {
+                                    data[Central_ + Division] = str.Substring(11);
+                                }
+                                else if (string.Equals(Range, title, StringComparison.OrdinalIgnoreCase))
+                                {
+                                    data[Central_ + Range] = str.Substring(8);
+                                }
+                            }
+                        }
+                        else
+                        {
+                            foreach (var str in list)
+                            {
+                                string? val = Helper.GetFieldValue(str, Zone, Commissionerate);
+                                if (val is not null)
+                                {
+                                    data[State_ + Zone] = val;
+                                    continue;
+                                }
+
+                                val = Helper.GetFieldValue(str, Division, Circle, Ward);
+                                if (val is not null)
+                                {
+                                    data[State_ + Division] = val;
+                                    continue;
+                                }
+
+                                val = Helper.GetFieldValue(str, Charge, Range, Sector, Unit, Ward);
+                                if (val is not null)
+                                {
+                                    data[State_ + Charge] = val;
+                                }
+                            }
                         }
                     }
 
