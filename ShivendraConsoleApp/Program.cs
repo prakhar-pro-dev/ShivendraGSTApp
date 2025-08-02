@@ -2,7 +2,6 @@
 using Microsoft.Playwright;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -96,7 +95,7 @@ static class Program
 
         var page = await browser.NewPageAsync();
 
-        string[] gstIds = await GetGstIdsAsync(path);
+        string[] gstIds = await ReadWriteOperations.GetGstIdsAsync(path);
         IdIterator.Configure(gstIds);
 
         var pageLoadtsk = page.GotoAsync(SiteUrl);
@@ -163,7 +162,7 @@ static class Program
                     }
                 }
 
-                HandleFileUsedByProcessException(Workbook, token);
+                ReadWriteOperations.HandleFileUsedByProcessException(Workbook, token);
                 IdIterator.Complete(token);
                 if (!token.IsCancellationRequested) 
                     await page.ReloadAsync();
@@ -355,41 +354,5 @@ static class Program
 
         foreach (var row2 in Sheet.RowsUsed())
             row2.Height = FixedRowHeight;
-    }
-
-    private static async Task<string[]> GetGstIdsAsync(string filePath)
-    {
-        if (!filePath.Split('\\').Last().EndsWith(".csv"))
-        {
-            ExcelManager.ConvertToCSV(filePath);
-            filePath = "output.csv";
-        }
-
-        var inputs = await File.ReadAllTextAsync(filePath);
-        return inputs.Split().Where(s => !string.IsNullOrEmpty(s)).ToArray();
-    }
-
-
-    private static void HandleFileUsedByProcessException(XLWorkbook workbook, CancellationToken token)
-    {
-        bool alreadPrompted = false;
-        while (!token.IsCancellationRequested)
-        {
-            try
-            {
-                if (!token.IsCancellationRequested)
-                {
-                    string output = (OutputPath ?? Directory.GetCurrentDirectory()) + OutputFileName;
-                    workbook.SaveAs(output);
-                    Console.WriteLine($"✅ Extracted visible content saved to {output}");
-                }
-                return;
-            }
-            catch
-            {
-                if (!alreadPrompted) Console.WriteLine($"Close the open excel file");
-                alreadPrompted = true;
-            }
-        }
     }
 }
