@@ -43,8 +43,6 @@ internal static class GSTPageContentLoader
 
             try
             {
-                //var errorElement = await page.QuerySelectorAsync("span.err");
-                //var errorElement = await page.QuerySelectorAsync("text=The GSTIN/UIN that you have entered");
                 var errorElement = await page.WaitForSelectorAsync("span.err", new()
                 {
                     State = WaitForSelectorState.Visible, // Wait until it's actually visible
@@ -74,43 +72,16 @@ internal static class GSTPageContentLoader
                             await Task.CompletedTask;
                             return Console.ReadLine()!;
                         }),
-                        //Task.Run(async () =>
-                        //{
-                        //    while (true)
-                        //    {
-                        //        if (token.IsCancellationRequested) return string.Empty;
-                        //        await Task.Delay(100);
-                        //    }
-                        //})
                         timerTask
                         );
 
                     string? input = await tsk;
 
-                    //await timerTask;
-
-                    //if (!string.IsNullOrEmpty(input) && input.ToLower().Equals("y"))
-                    //{
-                    //    return;
-                    //}
-
                     return;
                 }
-
-                // // Wait until it's NOT visible (or doesn't exist)
-                // while (await page.IsVisibleAsync("span.err") && !token.IsCancellationRequested)
-                // {
-                //     await Task.Delay(100);
-                // }
-                //
-                // if (_gstIdHandlerIteration >= MaxGstIdInvalidIteration)
-                // {
-                //     return;
-                // }
             }
             catch
             {
-                //await Task.Delay(1000);
                 await Task.Yield();
             }
         }

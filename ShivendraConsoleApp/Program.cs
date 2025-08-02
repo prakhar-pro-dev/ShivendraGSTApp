@@ -62,10 +62,6 @@ static class Program
 
     private static readonly XLWorkbook Workbook = new XLWorkbook();
     private static readonly IXLWorksheet Sheet = Workbook.Worksheets.Add("Parsed HTML");
-    //private static TaskCompletionSource tsk = null!;
-    //private static TaskCompletionSource tsk2 = null!;
-
-    //string UIN = "27ASCPM3655M1ZC";
 
     public static async Task Main()
     {
@@ -203,42 +199,13 @@ static class Program
         if (!PageLoadSuccess)
         {
             Sheet.Cell(_row, ColumnNum[GstinUin]).Value = originalId;
-            //await tsk;
-            //await tsk2;
             return;
         }
 
-        /*
-        var errorElement = await page.QuerySelectorAsync("span.err");
-
-        if (errorElement != null && await errorElement.IsVisibleAsync())
-        {
-            string errorText = await errorElement.InnerTextAsync();
-            Console.WriteLine($"GSTIN Not Found for id - {originalId} /t Error - " + errorText);
-            Console.WriteLine("Do you want to skip? [y/n]");
-
-            string? input = Console.ReadLine();
-            if (!string.IsNullOrEmpty(input) && input.ToLower().Equals("y"))
-            {
-                return;
-            }
-        }
-
-        if (errorElement is not null)
-        {
-            string error = await errorElement.InnerTextAsync();
-        }
-        */
-
-        // Use the appropriate selector for the gst input field
-
-        //var inputElement = await page.QuerySelectorAsync(InputGstid);
         string gstId = await page.InnerTextAsync("div.col-sm-6 > h4");
         gstId = gstId.Split(":").Last().Trim();
         
         if (string.IsNullOrEmpty(gstId)) gstId = originalId;
-
-        //string gstId = (string)(await inputElement!.GetAttributeAsync(InputGstid))!;
 
         var strongElements = await page.QuerySelectorAllAsync("strong");
 
@@ -401,52 +368,9 @@ static class Program
 
         var inputs = await File.ReadAllTextAsync(filePath);
         return inputs.Split().Where(s => !string.IsNullOrEmpty(s)).ToArray();
-
-        /*
-        //using var workbook = new XLWorkbook(filePath);
-        //var worksheet = workbook.Worksheet(1); // or by name
-        //if (worksheet == null)
-        //{
-        //    Console.WriteLine("Worksheet not found or is invalid");
-        //    Console.Write("Supported Excel formats are - ");
-        //    for (int i = 0; i < SupportedOutputExcelFormats.Length; i++)
-        //    {
-        //        var format = SupportedOutputExcelFormats[i];
-        //        if (i == SupportedOutputExcelFormats.Length - 1)
-        //        {
-        //            format = "and " + format;
-        //        }
-        //        else
-        //        {
-        //            format += ", ";
-        //        }
-        //        Console.Write(format);
-        //    }
-        //    Console.WriteLine();
-
-        //    return Array.Empty<string>();
-        //}
-
-        //List<string> gstIds = [];
-        //foreach (var row in worksheet.RangeUsed()?.Rows()!)
-        //{
-        //    // Escape double quotes and wrap in quotes
-        //    var csvLine = string.Join(",", row.Cells().Select(cell =>
-        //    {
-        //        var val = cell.GetValue<string>()?.Replace("\"", "\"\"");
-        //        return $"\"{val}\"";
-        //    }));
-
-
-        //    gstIds.Add(csvLine);
-        //}
-
-        //return gstIds.ToArray();
-        */
     }
 
 
-    //private static int currentExcelTrySaveCnt;
     public static void HandleFileUsedByProcessException(XLWorkbook workbook, CancellationToken token)
     {
         bool alreadPrompted = false;
@@ -454,10 +378,9 @@ static class Program
         {
             try
             {
-                string output = (OutputPath ?? Directory.GetCurrentDirectory()) + OutputFileName;
-                //workbook.SaveAs("ParsedHtmlContent.xlsx");
                 if (!token.IsCancellationRequested)
                 {
+                    string output = (OutputPath ?? Directory.GetCurrentDirectory()) + OutputFileName;
                     workbook.SaveAs(output);
                     Console.WriteLine($"✅ Extracted visible content saved to {output}");
                 }
@@ -467,8 +390,6 @@ static class Program
             {
                 if (!alreadPrompted) Console.WriteLine($"Close the open excel file");
                 alreadPrompted = true;
-                //Console.WriteLine($"Press Enter :");
-                //Console.ReadKey();
             }
         }
     }
