@@ -238,7 +238,6 @@ static class Program
         foreach (var column in ColumnNum.Keys) data[column] = string.Empty;
         data[GstinUin] = gstId;
 
-        int col = 2;
         foreach (var element in strongElements)
         {
             string value = await element.InnerTextAsync();
@@ -388,7 +387,6 @@ static class Program
             var rowQuery = rowsQuery[i];
             var cells = await rowQuery.QuerySelectorAllAsync("th, td"); // handle both header and data cells
 
-            int colIdx = col;
             bool mergeTwoCol = false, isGoods = true;
             string colVal = "";
             foreach (var cell in cells)
