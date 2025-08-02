@@ -2,7 +2,6 @@
 using Microsoft.Playwright;
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -44,6 +43,7 @@ static class Program
     private const string SiteUrl = "https://services.gst.gov.in/services/searchtp";
     private const string InputGstid = "input[name='for_gstin']";
     private const string CaptchaInput = "input[name='cap']";
+    private const string gap = " ";
 
     // Column constants
     private const string GstinUin = "GSTIN/UIN";
@@ -57,12 +57,16 @@ static class Program
     private const string Range = "Range";
     private const string Jurisdiction = "JURISDICTION";
     private const string Center = "CENTER";
-    private const string State_ = "State ";
+    private const string State = "State";
     private const string Charge = "Charge";
     private const string Circle = "Circle";
     private const string Ward = "Ward";
     private const string Sector = "Sector";
     private const string Unit = "Unit";
+    private const string District = "District";
+    private const string Headquarter = "Headquarter";
+    private const string AC_or_CTO_Ward = "AC / CTO Ward";
+    private const string LOCAL_GST_Office = "LOCAL GST Office";
     private const string Goods = "Goods";
     private const string Services = "Services";
     //private const string Zone = "Central Zone";
@@ -71,6 +75,14 @@ static class Program
     //private const string Range = "Central Range";
 
     #endregion
+
+    // Column lists
+    private static readonly string[] Zone_Commissionerate = new[] { Zone, Commissionerate };
+
+    private static readonly string[] Division_level = new[] { Division };
+
+    private static readonly string[] Sub_division = new[]
+        { Range, Circle, Ward, Unit, Charge, Sector, District, Headquarter, LOCAL_GST_Office, AC_or_CTO_Ward };
 
     private static readonly XLWorkbook Workbook = new XLWorkbook();
     private static readonly IXLWorksheet Sheet = Workbook.Worksheets.Add("Parsed HTML");
@@ -222,7 +234,8 @@ static class Program
         var strongElements = await page.QuerySelectorAllAsync("strong");
 
         var data = new Dictionary<string, string>();
-
+        
+        foreach (var column in ColumnNum.Keys) data[column] = string.Empty;
         data[GstinUin] = gstId;
 
         int col = 2;
@@ -290,26 +303,34 @@ static class Program
                         }
                         else
                         {
-                            foreach (var str in list)
+                            foreach (var item in list)
                             {
-                                string? val = Helper.GetFieldValue(str, Zone, Commissionerate);
+                                string str = item.Trim();
+                                string? val = Helper.GetFieldValue(str, State);
                                 if (val is not null)
                                 {
-                                    data[State_ + Zone] = val;
+                                    data[State] = data[State] + Environment.NewLine + val;
                                     continue;
                                 }
 
-                                val = Helper.GetFieldValue(str, Division, Circle, Ward);
+                                val = Helper.GetFieldValue(str, Zone_Commissionerate);
                                 if (val is not null)
                                 {
-                                    data[State_ + Division] = val;
+                                    data[State + gap + Zone] = data[State + gap + Zone] + Environment.NewLine + val;
                                     continue;
                                 }
 
-                                val = Helper.GetFieldValue(str, Charge, Range, Sector, Unit, Ward);
+                                val = Helper.GetFieldValue(str, Division_level);
                                 if (val is not null)
                                 {
-                                    data[State_ + Charge] = val;
+                                    data[State + gap + Division] = data[State + gap + Division] + Environment.NewLine + val;
+                                    continue;
+                                }
+
+                                val = Helper.GetFieldValue(str, Sub_division);
+                                if (val is not null)
+                                {
+                                    data[State + gap + Charge] = data[State + gap + Charge] + Environment.NewLine + val;
                                 }
                             }
                         }
@@ -413,10 +434,8 @@ static class Program
         foreach (var dataPair in ColumnNum)
         {
             int currentCol = dataPair.Value;
-            data.TryGetValue(dataPair.Key, out var value);
-            value ??= string.Empty;
 
-            Sheet.Cell(_row, currentCol).Value = value;
+            Sheet.Cell(_row, currentCol).Value = data[dataPair.Key].Trim(' ', '-');
         }
 
         // Apply to used range only

@@ -5,7 +5,9 @@ namespace ShivendraConsoleApp;
 
 internal class Helper
 {
-    internal static string? GetFieldValue(string value, params ReadOnlySpan<string> options)
+    private const string del = " - ";
+
+    internal static string? GetFieldValue(string value, params string[] options)
     {
         string? title = value.Split('(', '-', ')').FirstOrDefault(s => !s.Equals(string.Empty))?.Trim();
         if (title is null) return null;
@@ -20,7 +22,7 @@ internal class Helper
 
                 sub = sub.Substring(i);
 
-                return option + " - " + (sub.StartsWith(option, StringComparison.OrdinalIgnoreCase) ? sub.Substring(option.Length) : sub).Trim();
+                return option + del + (sub.StartsWith(option, StringComparison.OrdinalIgnoreCase) ? sub.Substring(option.Length) : sub).Trim();
             }
         }
 
