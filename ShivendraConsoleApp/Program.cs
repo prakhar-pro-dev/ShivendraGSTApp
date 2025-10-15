@@ -352,6 +352,16 @@ static class Program
                     if (nextP is IElementHandle elementHandle)
                     {
                         value2 = await elementHandle.InnerTextAsync();
+
+                        if (value == "GSTIN / UIN Status")
+                        {
+                            nextP = await nextP.EvaluateHandleAsync("el => el.nextElementSibling");
+                            if (nextP is IElementHandle _element)
+                            {
+                                value2 += Environment.NewLine + await _element.InnerTextAsync();
+                            }
+                        }
+
                         data[value] = value2;
                     }
                 }
