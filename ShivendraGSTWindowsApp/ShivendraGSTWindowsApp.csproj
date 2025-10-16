@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net9.0-windows</TargetFramework>
+    <UseWindowsForms>true</UseWindowsForms>
+	  <ImplicitUsings>disabled</ImplicitUsings>
+	  <Nullable>enable</Nullable>
+	  <WarningLevel>9999</WarningLevel>
+	  <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\ShivendraConsoleApp\ShivendraConsoleApp.csproj" />
+  </ItemGroup>
+
+</Project>

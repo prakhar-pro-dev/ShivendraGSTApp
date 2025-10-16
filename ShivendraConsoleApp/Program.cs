@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 
 namespace ShivendraConsoleApp;
 
-static class Program
+public static class Program
 {
     static Program()
     {
@@ -87,11 +87,28 @@ static class Program
     private static readonly XLWorkbook Workbook = new XLWorkbook();
     private static readonly IXLWorksheet Sheet = Workbook.Worksheets.Add("Parsed HTML");
 
-    public static async Task Main()
-    {
-        Console.Write("Enter file path - ");
-        string? path = Console.ReadLine();
+    private static IBrowser browser = null!;
+    private static IPage page = null!;
+    private static string[] gstIds = null!;
+    private static Task<IResponse?> pageLoadtsk = null!;
+    private static CancellationTokenSource cts = new();
 
+    public static async Task Main(params string[] args)
+    {
+        string? path = null;
+
+        if (args.Length == 0)
+        {
+            Console.Write("Enter file path - ");
+            path = Console.ReadLine();
+        }
+        else path = args[0];
+
+            await Main2(path);
+    }
+
+    public static async Task Main2(string? path) 
+    {
         if (string.IsNullOrEmpty(path))
         {
             path = InputPath;
@@ -109,24 +126,23 @@ static class Program
             OutputFileName = path.Split("\\").Last().Split('.').First() + DefaultFileSuffix;
         }
 
-        using var playwright = await Playwright.CreateAsync();
+        IPlaywright playwright = await Playwright.CreateAsync();
 
         var chromePath = @"C:\Program Files\Google\Chrome\Application\chrome.exe";
 
-        var browser = await playwright.Chromium.LaunchAsync(new()
+        browser = await playwright.Chromium.LaunchAsync(new()
         {
             Headless = false,
             ExecutablePath = chromePath
         });
 
-        var page = await browser.NewPageAsync();
+        page = await browser.NewPageAsync();
 
-        string[] gstIds = await ReadWriteOperations.GetGstIdsAsync(path);
+        gstIds = await ReadWriteOperations.GetGstIdsAsync(path);
         IdIterator.Configure(gstIds);
 
-        var pageLoadtsk = page.GotoAsync(SiteUrl);
+        pageLoadtsk = page.GotoAsync(SiteUrl);
 
-        CancellationTokenSource cts = new();
         page.Load += async (_, _) =>
         {
             cts.Cancel();
@@ -201,7 +217,12 @@ static class Program
             }
         };
 
-        Console.ReadKey();
+        //Console.ReadKey();
+        //await browser.CloseAsync();
+    }
+
+    public static async Task CloseAsync()
+    {
         await browser.CloseAsync();
     }
 
