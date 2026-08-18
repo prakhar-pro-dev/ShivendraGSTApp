@@ -1,7 +1,8 @@
-using ShivendraGst.Core;
+﻿using ShivendraGst.Core;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -156,6 +157,26 @@ public partial class MainForm : Form
         {
             MessageBox.Show(this, "Choose an output folder first.",
                 "GST Inspect", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            return;
+        }
+
+        // Check before launching anything, so a missing dependency is a dialog naming it
+        // rather than a failure inside Playwright a minute later.
+        IReadOnlyList<MissingPrerequisite> missing = Prerequisites.Check(_discovered);
+        if (!Prerequisites.LogResult(missing))
+        {
+            string detail = string.Join(
+                Environment.NewLine + Environment.NewLine,
+                missing.Select(m => $"{m.Name}{Environment.NewLine}{m.Reason}{Environment.NewLine}Install: {m.HowToInstall}"));
+
+            MessageBox.Show(
+                this,
+                $"This run cannot start yet:{Environment.NewLine}{Environment.NewLine}{detail}" +
+                $"{Environment.NewLine}{Environment.NewLine}Or install everything at once:{Environment.NewLine}{Prerequisites.BootstrapCommand}",
+                "GST Inspect - missing prerequisites",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Warning);
+
             return;
         }
 

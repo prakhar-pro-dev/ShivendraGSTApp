@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -13,8 +13,8 @@
   </PropertyGroup>
 
   <!-- The scraping engine, logger and config live in the shared Core library, which the
-       WinForms front end also references. configFile.json and Convert_To_CSV.py travel
-       with it and land in this project's output folder. -->
+       WinForms front end also references. configFile.json travels with it and lands
+       in this project's output folder. -->
   <ItemGroup>
     <ProjectReference Include="..\ShivendraGst.Core\ShivendraGst.Core.csproj" />
   </ItemGroup>
