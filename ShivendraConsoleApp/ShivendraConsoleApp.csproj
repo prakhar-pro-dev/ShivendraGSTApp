@@ -7,9 +7,8 @@
     <Nullable>enable</Nullable>
 	  <WarningLevel>9999</WarningLevel>
 	  <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
-	  <!-- Release version. Bump this before tagging a release so the tag, the assembly
-	       and the log-file header all agree. Last released tag: v1.0.4. -->
-	  <Version>1.0.5</Version>
+	  <!-- Kept in step with ShivendraGst.Core and ShivendraGstWinApp. -->
+	  <Version>1.1.0</Version>
   </PropertyGroup>
 
   <!-- The scraping engine, logger and config live in the shared Core library, which the
