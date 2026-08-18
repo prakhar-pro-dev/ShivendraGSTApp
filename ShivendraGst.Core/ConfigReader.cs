@@ -9,11 +9,32 @@ internal static class ConfigReader
 {
     private const string configFile = "configFile.json";
 
+    /// <summary>
+    /// Resolves configFile.json next to the executable, falling back to the working
+    /// directory.
+    ///
+    /// It used to look only in the working directory, which is fine for a console app
+    /// started from its own folder but wrong for a GUI launched from a shortcut, the
+    /// debugger, or anywhere else - the config was silently missed and every setting fell
+    /// back to its default.
+    /// </summary>
+    private static string ResolveConfigPath()
+    {
+        string beside = Path.Combine(AppContext.BaseDirectory, configFile);
+        if (File.Exists(beside)) return beside;
+
+        string working = Path.Combine(Directory.GetCurrentDirectory(), configFile);
+        if (File.Exists(working)) return working;
+
+        // Neither exists - return the expected location so the error names the right path.
+        return beside;
+    }
+
     internal static void UpdateConfig()
     {
         try
         {
-            var jsonNode = JsonNode.Parse(File.ReadAllText(Path.Combine(Directory.GetCurrentDirectory(), configFile)));
+            var jsonNode = JsonNode.Parse(File.ReadAllText(ResolveConfigPath()));
 
             if (jsonNode!["columns"] is JsonArray jsonArray)
             {

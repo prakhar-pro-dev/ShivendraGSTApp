@@ -63,6 +63,14 @@ public static class GstBatchRunner
             return results;
         }
 
+        // Checked before the browser starts as well as inside the loop: cancelling straight
+        // after starting should not leave a Chrome window open with nothing to do.
+        if (cancellationToken.IsCancellationRequested)
+        {
+            Logger.Warning("Cancelled before the batch started.");
+            return results;
+        }
+
         using IPlaywright playwright = await Playwright.CreateAsync().ConfigureAwait(false);
 
         await using IBrowser browser = await playwright.Chromium.LaunchAsync(new()

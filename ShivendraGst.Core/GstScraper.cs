@@ -132,8 +132,9 @@ internal sealed class GstScraper
 
             try
             {
+                // Cancel but do not dispose: the previous id's work may still be checking
+                // its token, and reading a disposed source's token throws.
                 previous.Cancel();
-                previous.Dispose();
 
                 if (cancellationToken.IsCancellationRequested)
                 {
@@ -241,7 +242,6 @@ internal sealed class GstScraper
         {
             _page.Load -= OnLoad;
             idCts.Cancel();
-            idCts.Dispose();
         }
 
         if (cancellationToken.IsCancellationRequested)
