@@ -260,10 +260,19 @@ internal static class Logger
     /// <summary>Callers must hold <see cref="_sync"/>.</summary>
     private static void WriteHeader()
     {
-        AssemblyName assembly = typeof(Logger).Assembly.GetName();
+        Assembly assembly = typeof(Logger).Assembly;
+
+        // InformationalVersion is the <Version> from the csproj verbatim (the SDK also
+        // appends the source revision when building in a git repo), so the log header
+        // names the exact build. Fall back to the numeric assembly version if it is
+        // somehow absent.
+        string name = assembly.GetName().Name ?? nameof(ShivendraConsoleApp);
+        string version = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion
+                         ?? assembly.GetName().Version?.ToString()
+                         ?? "unknown";
 
         WriteToFile(new string('=', 78));
-        WriteToFile($"{assembly.Name} v{assembly.Version}");
+        WriteToFile($"{name} v{version}");
         WriteToFile($"Run started : {DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture)}");
         WriteToFile($"Machine     : {Environment.MachineName}");
         WriteToFile($"User        : {Environment.UserName}");
