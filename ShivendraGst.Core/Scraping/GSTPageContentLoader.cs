@@ -81,8 +81,19 @@ internal static class GSTPageContentLoader
         IScrapeUi ui,
         CancellationToken token)
     {
+        bool loggedWait = false;
+
         while (!token.IsCancellationRequested)
         {
+            // Once the page or browser is gone, WaitForSelectorAsync throws instantly
+            // rather than honouring its timeout, so the retry below becomes a hot loop.
+            // That is how a two-minute run wrote a 5 MB log of the same line.
+            if (page.IsClosed)
+            {
+                Logger.Debug($"Page closed while watching for the error banner for {gstin}.");
+                return;
+            }
+
             IElementHandle? errorElement;
 
             try
@@ -95,10 +106,28 @@ internal static class GSTPageContentLoader
             }
             catch (Exception ex)
             {
-                // No banner within the timeout - either the lookup is still running or it
-                // succeeded, in which case the other watcher wins the race.
-                Logger.Debug($"No error banner yet for {gstin} - {ex.Message}");
-                await Task.Yield();
+                // Normally a 5s timeout: the lookup is still running, or it succeeded and
+                // the other watcher wins the race. Either way, retry.
+                //
+                // Logged once per id rather than per attempt - it repeats every few seconds
+                // while the operator works the captcha - and the delay means that even an
+                // exception thrown instantly (a closing page, a dead driver) costs four
+                // iterations a second rather than a full CPU core.
+                if (!loggedWait)
+                {
+                    loggedWait = true;
+                    Logger.Debug($"No error banner yet for {gstin} - {ex.Message}");
+                }
+
+                try
+                {
+                    await Task.Delay(250, token);
+                }
+                catch (OperationCanceledException)
+                {
+                    return;
+                }
+
                 continue;
             }
 
