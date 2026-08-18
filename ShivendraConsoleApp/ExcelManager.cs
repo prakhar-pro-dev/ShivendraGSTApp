@@ -29,9 +29,16 @@ internal static class ExcelManager
 
         process.WaitForExit();
 
-        Console.WriteLine("Output:\n" + output);
+        Logger.Info($"Converted '{filePath}' to CSV using: {pythonPath} {args}");
+
+        if (!string.IsNullOrWhiteSpace(output))
+            Logger.Info("Output:\n" + output);
+
         if (!string.IsNullOrWhiteSpace(errors))
-            Console.WriteLine("Errors:\n" + errors);
+            Logger.Error("Errors:\n" + errors);
+
+        if (process.ExitCode != 0)
+            Logger.Error($"{scriptPath} exited with code {process.ExitCode}; the CSV may be missing or incomplete.");
 
     }
 }

@@ -23,11 +23,19 @@ internal static class GSTPageContentLoader
                 Program.PageLoadSuccess = true;
                 return;
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
-                Console.WriteLine($"Error - {ex.Message}");
+                // File-only: this fires about once a second while the captcha is still
+                // unsolved, so console output would be flooded. The give-up below is
+                // what the operator actually needs to see.
+                Logger.Debug($"Waiting for page contents (attempt {_loadContentIteration + 1} of {MaxCaptchaTimeoutIteration}) - {ex.Message}");
+
                 if (++_loadContentIteration >= MaxCaptchaTimeoutIteration)
+                {
+                    Logger.Warning($"Gave up waiting for page contents after {MaxCaptchaTimeoutIteration} attempts.");
                     return;
+                }
+
                 await Task.Delay(1000);
             }
         }
@@ -57,8 +65,8 @@ internal static class GSTPageContentLoader
                 if (_gstIdHandlerIteration == 1)
                 {
                     string errorText = await errorElement!.InnerTextAsync();
-                    Console.WriteLine($"GSTIN Not Found for id - {gstin} /t Error - " + errorText);
-                    Console.WriteLine("Do you want to skip? [y/n]");
+                    Logger.Warning($"GSTIN Not Found for id - {gstin}\tError - " + errorText);
+                    Logger.Prompt($"Do you want to skip? [y/n] (continues automatically after {ConfigReader.TimeoutForInvalidId}s) ");
 
                     var timerTask = Task.Run(async () =>
                     {
@@ -76,6 +84,8 @@ internal static class GSTPageContentLoader
                         );
 
                     string? input = await tsk;
+                    Console.WriteLine();
+                    Logger.PromptResponse(input);
 
                     return;
                 }
