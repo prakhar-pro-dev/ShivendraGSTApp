@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 
-namespace ShivendraConsoleApp;
+namespace ShivendraGst.Core;
 
 internal static class ExcelManager
 {

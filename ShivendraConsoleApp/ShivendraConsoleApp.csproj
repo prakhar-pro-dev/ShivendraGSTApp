@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -12,18 +12,17 @@
 	  <Version>1.0.5</Version>
   </PropertyGroup>
 
+  <!-- The scraping engine, logger and config live in the shared Core library, which the
+       WinForms front end also references. configFile.json and Convert_To_CSV.py travel
+       with it and land in this project's output folder. -->
   <ItemGroup>
-    <PackageReference Include="ClosedXML" Version="0.105.0" />
-    <PackageReference Include="Microsoft.Playwright" Version="1.54.0" />
+    <ProjectReference Include="..\ShivendraGst.Core\ShivendraGst.Core.csproj" />
   </ItemGroup>
 
+  <!-- Referenced directly so the Playwright package's targets deploy the browser driver
+       next to this executable. -->
   <ItemGroup>
-    <None Update="configFile.json">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
-    <None Update="Convert_To_CSV.py">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
+    <PackageReference Include="Microsoft.Playwright" Version="1.54.0" />
   </ItemGroup>
 
 </Project>

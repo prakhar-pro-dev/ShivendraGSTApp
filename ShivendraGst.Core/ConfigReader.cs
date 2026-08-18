@@ -3,12 +3,11 @@ using System.IO;
 using System.Linq;
 using System.Text.Json.Nodes;
 
-namespace ShivendraConsoleApp;
+namespace ShivendraGst.Core;
 
 internal static class ConfigReader
 {
     private const string configFile = "configFile.json";
-    internal static int TimeoutForInvalidId;
 
     internal static void UpdateConfig()
     {
@@ -23,56 +22,56 @@ internal static class ConfigReader
                 {
                     var column = item?.ToString();
                     if (column is null) continue;
-                    Program.ColumnNum[column] = col++;
+                    AppConfig.ColumnNum[column] = col++;
                 }
             }
 
             GSTPageContentLoader.MaxCaptchaTimeoutIteration = int.Parse(jsonNode["maxCaptchaTimeoutIteration"]!.ToString());
             GSTPageContentLoader.MaxGstIdInvalidIteration = int.Parse(jsonNode["maxGstIdInvalidIteration"]!.ToString());
-            Program.InputPath =  jsonNode!["inputPath"]!.ToString();
+            AppConfig.InputPath =  jsonNode!["inputPath"]!.ToString();
             string? outputDirectory = jsonNode["outputPath"]?.ToString();
-            TimeoutForInvalidId = int.Parse(jsonNode["invalid_id_timeout_in_seconds"]!.ToString());
-            Program.typing_delay = int.Parse(jsonNode["typing_delay_in_milliseconds"]!.ToString());
+            AppConfig.TimeoutForInvalidId = int.Parse(jsonNode["invalid_id_timeout_in_seconds"]!.ToString());
+            AppConfig.TypingDelay = int.Parse(jsonNode["typing_delay_in_milliseconds"]!.ToString());
 
-            Program.DefaultFileSuffix = jsonNode["outputFileSuffix"]! + ".xlsx";
+            AppConfig.DefaultFileSuffix = jsonNode["outputFileSuffix"]! + ".xlsx";
             
-            Program.OutputFileName = null!;
+            AppConfig.OutputFileName = null!;
             if (outputDirectory is not null)
             {
                 string outputFileFormat = outputDirectory.Split('.').Last();
-                foreach (var format in Program.SupportedOutputExcelFormats)
+                foreach (var format in AppConfig.SupportedOutputExcelFormats)
                 {   
                     if (outputFileFormat.EndsWith(format))
                     {
-                        Program.OutputFileName = outputDirectory.Split("\\").Last();
-                        Program.OutputPath = outputDirectory.Substring(0, outputDirectory.Length - Program.OutputFileName.Length);
+                        AppConfig.OutputFileName = outputDirectory.Split("\\").Last();
+                        AppConfig.OutputPath = outputDirectory.Substring(0, outputDirectory.Length - AppConfig.OutputFileName.Length);
                         break;
                     }
                 }
 
                 // output file name not mentioned in config file
-                Program.OutputPath ??= outputDirectory;
-                if (Program.OutputFileName is null)
+                AppConfig.OutputPath ??= outputDirectory;
+                if (AppConfig.OutputFileName is null)
                 {
-                    Program.OutputFileName = Program.InputPath.Split("\\").Last().Split('.').First() + Program.DefaultFileSuffix;
+                    AppConfig.OutputFileName = AppConfig.InputPath.Split("\\").Last().Split('.').First() + AppConfig.DefaultFileSuffix;
                 }
-                else Program.OutputFileName = Program.OutputFileName.Split('.').First() + ".xlsx";
+                else AppConfig.OutputFileName = AppConfig.OutputFileName.Split('.').First() + ".xlsx";
             }
             else
             {
-                Program.OutputPath = Directory.GetCurrentDirectory() + "\\";
-                Program.OutputFileName = Program.OutputFileName.Split('.').First() + Program.DefaultFileSuffix;
+                AppConfig.OutputPath = Directory.GetCurrentDirectory() + "\\";
+                AppConfig.OutputFileName = AppConfig.OutputFileName.Split('.').First() + AppConfig.DefaultFileSuffix;
             }
 
-            Program.OutputPath += "\\";
+            AppConfig.OutputPath += "\\";
 
             if (Double.TryParse(jsonNode["columnWidth"]?.ToString(), out var width))
             {
-                Program.FixedColumnWidth = width;
+                AppConfig.FixedColumnWidth = width;
             }
             if (Double.TryParse(jsonNode["rowHeight"]?.ToString(), out var height))
             {
-                Program.FixedRowHeight = height;
+                AppConfig.FixedRowHeight = height;
             }
         }
         catch (Exception ex)

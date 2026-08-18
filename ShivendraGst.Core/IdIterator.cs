@@ -1,6 +1,6 @@
 ﻿using System.Threading;
 
-namespace ShivendraConsoleApp;
+namespace ShivendraGst.Core;
 
 internal static class IdIterator
 {

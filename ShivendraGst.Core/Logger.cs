@@ -4,9 +4,9 @@ using System.IO;
 using System.Reflection;
 using System.Threading.Tasks;
 
-namespace ShivendraConsoleApp;
+namespace ShivendraGst.Core;
 
-internal enum LogLevel
+public enum LogLevel
 {
     /// <summary>Written to the log file only. Use for high-volume retry/polling noise.</summary>
     Debug = 0,
@@ -27,7 +27,7 @@ internal enum LogLevel
 /// switches off for the rest of the run and the console keeps working - a logger that
 /// throws from inside a catch block would hide the original error.
 /// </summary>
-internal static class Logger
+public static class Logger
 {
     private const string LogFolderName = "Logs";
     private const string LogFileName = "latest-run.log";
@@ -40,17 +40,28 @@ internal static class Logger
     private static bool _hooksRegistered;
 
     /// <summary>Messages below this level are dropped entirely.</summary>
-    internal static LogLevel MinimumLevel = LogLevel.Debug;
+    public static LogLevel MinimumLevel = LogLevel.Debug;
 
     /// <summary>Full path of the current run's log file, empty until the first write.</summary>
-    internal static string LogFilePath { get; private set; } = string.Empty;
+    public static string LogFilePath { get; private set; } = string.Empty;
+
+    /// <summary>
+    /// Raised for every message that reaches the console, so a GUI front end can show the
+    /// same lines in a log pane. Debug messages are file-only and are not raised.
+    ///
+    /// Handlers run on whichever thread logged the message and inside the logger's lock,
+    /// so they must not block - a WinForms handler should marshal to the UI thread with
+    /// BeginInvoke rather than Invoke. Handler exceptions are swallowed: a broken log view
+    /// must not take down the run.
+    /// </summary>
+    public static event Action<LogLevel, string>? MessageWritten;
 
     /// <summary>
     /// Starts the log file and writes the run header. Optional - any log call
     /// initialises the logger on demand - but calling it first makes the header the
     /// first thing in the file.
     /// </summary>
-    internal static void Initialize()
+    public static void Initialize()
     {
         lock (_sync)
         {
@@ -58,31 +69,31 @@ internal static class Logger
         }
     }
 
-    internal static void Debug(string message) => Write(LogLevel.Debug, message, null);
+    public static void Debug(string message) => Write(LogLevel.Debug, message, null);
 
-    internal static void Info(string message) => Write(LogLevel.Info, message, null);
+    public static void Info(string message) => Write(LogLevel.Info, message, null);
 
-    internal static void Warning(string message) => Write(LogLevel.Warning, message, null);
+    public static void Warning(string message) => Write(LogLevel.Warning, message, null);
 
-    internal static void Error(string message) => Write(LogLevel.Error, message, null);
+    public static void Error(string message) => Write(LogLevel.Error, message, null);
 
     /// <summary>
     /// Logs an exception. The console gets the message plus <see cref="Exception.Message"/>;
     /// the log file gets the full exception including stack trace and inner exceptions.
     /// </summary>
-    internal static void Error(string message, Exception exception) => Write(LogLevel.Error, message, exception);
+    public static void Error(string message, Exception exception) => Write(LogLevel.Error, message, exception);
 
     /// <summary>
     /// Logs a warning that carries an exception, for recoverable failures such as an
     /// exhausted retry loop.
     /// </summary>
-    internal static void Warning(string message, Exception exception) => Write(LogLevel.Warning, message, exception);
+    public static void Warning(string message, Exception exception) => Write(LogLevel.Warning, message, exception);
 
     /// <summary>
     /// Writes an interactive prompt to the console without a trailing newline and
     /// records it in the log, so the log shows what the user was asked.
     /// </summary>
-    internal static void Prompt(string message)
+    public static void Prompt(string message)
     {
         lock (_sync)
         {
@@ -93,7 +104,7 @@ internal static class Logger
     }
 
     /// <summary>Records what the user typed at a prompt (or that the prompt timed out).</summary>
-    internal static void PromptResponse(string? response)
+    public static void PromptResponse(string? response)
     {
         string text = string.IsNullOrWhiteSpace(response) ? "<no response / timed out>" : response;
         lock (_sync)
@@ -104,7 +115,7 @@ internal static class Logger
     }
 
     /// <summary>Writes the run footer and closes the log file.</summary>
-    internal static void Shutdown()
+    public static void Shutdown()
     {
         lock (_sync)
         {
@@ -147,6 +158,7 @@ internal static class Logger
                     : message + " Error - " + exception.Message;
 
                 WriteToConsole(level, consoleText);
+                RaiseMessageWritten(level, consoleText);
             }
 
             WriteToFile(Format(level, message));
@@ -155,6 +167,23 @@ internal static class Logger
             {
                 WriteToFile(exception.ToString());
             }
+        }
+    }
+
+    private static void RaiseMessageWritten(LogLevel level, string text)
+    {
+        Action<LogLevel, string>? handler = MessageWritten;
+        if (handler is null) return;
+
+        try
+        {
+            handler(level, text);
+        }
+        catch (Exception ex)
+        {
+            // A failing log view must never break the scrape, and must never recurse
+            // back into Write - go straight to the file.
+            WriteToFile(Format(LogLevel.Warning, $"A log listener threw and was ignored: {ex.Message}"));
         }
     }
 
@@ -266,7 +295,7 @@ internal static class Logger
         // appends the source revision when building in a git repo), so the log header
         // names the exact build. Fall back to the numeric assembly version if it is
         // somehow absent.
-        string name = assembly.GetName().Name ?? nameof(ShivendraConsoleApp);
+        string name = assembly.GetName().Name ?? "ShivendraGst";
         string version = assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion
                          ?? assembly.GetName().Version?.ToString()
                          ?? "unknown";
