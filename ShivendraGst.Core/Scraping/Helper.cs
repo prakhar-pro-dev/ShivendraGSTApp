@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Linq;
 
-namespace ShivendraConsoleApp;
+namespace ShivendraGst.Core;
 
 internal class Helper
 {

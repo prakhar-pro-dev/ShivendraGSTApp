@@ -1,0 +1,36 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>disabled</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <WarningLevel>9999</WarningLevel>
+    <TreatWarningsAsErrors>True</TreatWarningsAsErrors>
+    <Version>1.0.0</Version>
+    <!-- Source is grouped into folders (Configuration, Diagnostics, Abstractions,
+         Scraping, Io, Resources) but everything stays in the single ShivendraGst.Core
+         namespace, so front ends need only one using. -->
+    <RootNamespace>ShivendraGst.Core</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="ClosedXML" Version="0.105.0" />
+    <PackageReference Include="Microsoft.Playwright" Version="1.54.0" />
+  </ItemGroup>
+
+  <!-- Copied into the output of whichever front end references this library, so both the
+       console app and the WinForms app find these next to their own executable.
+       Link flattens them out of Resources\ - ConfigReader and ExcelManager look for them
+       beside the executable, not in a subfolder. -->
+  <ItemGroup>
+    <None Update="Resources\configFile.json">
+      <Link>configFile.json</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Resources\Convert_To_CSV.py">
+      <Link>Convert_To_CSV.py</Link>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+</Project>
