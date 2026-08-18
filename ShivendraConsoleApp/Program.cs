@@ -14,12 +14,20 @@ static class Program
     static Program()
     {
         DefaultFileSuffix = InputPath = OutputFileName = string.Empty;
-        ConfigReader.UpdateConfig();
-
-        // Column names
-        foreach (var column in ColumnNum)
+        try
         {
-            Sheet.Cell(1, column.Value).Value = column.Key;
+            Logger.Initialize();
+            ConfigReader.UpdateConfig();
+
+            // Column names
+            foreach (var column in ColumnNum)
+            {
+                Sheet.Cell(1, column.Value).Value = column.Key;
+            }
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("Program constructor ran into an error.", ex);
         }
     }
 
@@ -89,17 +97,36 @@ static class Program
 
     public static async Task Main()
     {
-        Console.Write("Enter file path - ");
+        try
+        {
+            await MainInternal();
+        }
+        catch (Exception ex)
+        {
+            Logger.Error("An error occurred in Main.", ex);
+        }
+        finally
+        {
+            Logger.Shutdown();
+        }
+    }
+    
+    public static async Task MainInternal()
+    {
+        Logger.Prompt("Enter file path - ");
         string? path = Console.ReadLine();
+        Logger.PromptResponse(path);
 
         if (string.IsNullOrEmpty(path))
         {
             path = InputPath;
             if (string.IsNullOrEmpty(path))
             {
-                Console.WriteLine("Input path not valid");
+                Logger.Error("Input path not valid");
                 return;
             }
+
+            Logger.Info($"No path entered, using the configured input path - {path}");
 
             path.Trim('"');
         }
@@ -124,6 +151,9 @@ static class Program
         string[] gstIds = await ReadWriteOperations.GetGstIdsAsync(path);
         IdIterator.Configure(gstIds);
 
+        Logger.Info($"Read {gstIds.Length} GST id(s) from {path}");
+        Logger.Info($"Output workbook - {OutputPath}{OutputFileName}");
+
         var pageLoadtsk = page.GotoAsync(SiteUrl);
 
         CancellationTokenSource cts = new();
@@ -143,6 +173,7 @@ static class Program
 
             string id = gstIds[idx.Value];
             var input = id.Trim();
+            Logger.Info($"Processing GST id {idx.Value + 1} of {gstIds.Length} - {input}");
             if (string.IsNullOrEmpty(input))
             {
                 IdIterator.Complete(token);
@@ -173,7 +204,7 @@ static class Program
                     {
                         if (++waitForSiteOpen >= 10)
                         {
-                            Console.WriteLine("Website took too long to load");
+                            Logger.Warning($"Website took too long to load for GST id - {input}");
                             break;
                         }
 
@@ -195,8 +226,7 @@ static class Program
             }
             catch (Exception e)
             {
-                Console.WriteLine($"Unable to process data for GSTID - {input}");
-                Console.WriteLine($"Error - {e.Message}");
+                Logger.Error($"Unable to process data for GSTID - {input}.", e);
                 throw;
             }
         };
@@ -368,7 +398,7 @@ static class Program
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Exception for Title - {value}. Error - {ex.Message}");
+                Logger.Error($"Exception for Title - {value}.", ex);
             }
         }
 
@@ -380,7 +410,7 @@ static class Program
         if (table == null)
         {
             CommitDataToSheet(data, _row);
-            Console.WriteLine("Table not found.");
+            Logger.Warning($"Goods/services table not found for GST id - {originalId}");
             if (!tsk.IsCompleted) await tsk;
             else await tsk2;
             return;

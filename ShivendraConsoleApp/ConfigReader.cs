@@ -75,9 +75,9 @@ internal static class ConfigReader
                 Program.FixedRowHeight = height;
             }
         }
-        catch
+        catch (Exception ex)
         {
-            Console.WriteLine($"Invalid config file");
+            Logger.Error($"Invalid config file '{configFile}'.", ex);
         }
     }
 }

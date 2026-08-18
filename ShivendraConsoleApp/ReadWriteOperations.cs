@@ -33,13 +33,17 @@ internal static class ReadWriteOperations
                 {
                     string output = (Program.OutputPath ?? Directory.GetCurrentDirectory()) + Program.OutputFileName;
                     workbook.SaveAs(output);
-                    Console.WriteLine($"✅ Extracted visible content saved to {output}");
+                    Logger.Info($"✅ Extracted visible content saved to {output}");
                 }
                 return;
             }
-            catch
+            catch (Exception ex)
             {
-                if (!alreadPrompted) Console.WriteLine($"Close the open excel file");
+                if (!alreadPrompted)
+                {
+                    Logger.Warning($"Could not save '{Program.OutputFileName}'. Close the open excel file.", ex);
+                }
+
                 alreadPrompted = true;
             }
         }
