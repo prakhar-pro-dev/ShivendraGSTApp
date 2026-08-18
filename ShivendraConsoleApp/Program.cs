@@ -57,6 +57,12 @@ internal static class Program
 
             Logger.Info($"{inputFiles.Count} input file(s) to process.");
 
+            // Fail before launching anything if something the run needs is not installed.
+            if (!Prerequisites.LogResult(Prerequisites.Check(inputFiles)))
+            {
+                return 1;
+            }
+
             string outputDirectory = AppConfig.OutputPath ?? AppContext.BaseDirectory;
 
             IReadOnlyList<ScrapeFileResult> results = await GstBatchRunner
